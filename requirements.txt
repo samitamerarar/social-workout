@@ -1,2 +1,7 @@
 fastapi
 uvicorn[standard]
+pydantic-settings
+sqlalchemy
+# databases[asyncpg] #postgreSQL
+databases[aiosqlite] # SQLite
+python-dotenv

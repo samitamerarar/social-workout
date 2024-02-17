@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class UserPostIn(BaseModel):
@@ -6,6 +6,9 @@ class UserPostIn(BaseModel):
 
 
 class UserPost(UserPostIn):
+    # Enable ORM, pydantic returns return_value.body if return_value["body"] fails
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
 
 
@@ -15,6 +18,9 @@ class CommentIn(BaseModel):
 
 
 class Comment(CommentIn):
+    # Enable ORM, pydantic returns return_value.body if return_value["body"] fails
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
 
 

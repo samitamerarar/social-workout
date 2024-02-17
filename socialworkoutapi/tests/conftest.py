@@ -1,11 +1,14 @@
+import os
 from typing import AsyncGenerator, Generator
 
 import pytest
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
 
-from socialworkoutapi.main import app
-from socialworkoutapi.routers.post import comment_table, post_table
+# force TEST in env variable for tests
+os.environ["ENV_STATE"] = "test"
+from socialworkoutapi.database import database  # noqa: E402
+from socialworkoutapi.main import app  # noqa: E402
 
 
 # Shared accross other tests
@@ -23,9 +26,9 @@ def client() -> Generator:
 # Shared accross other tests
 @pytest.fixture(autouse=True)  # runs on every test
 async def db() -> AsyncGenerator:
-    post_table.clear()
-    comment_table.clear()
+    await database.connect()
     yield
+    await database.disconnect()  # this rollback database in database config
 
 
 @pytest.fixture()  # Dependency injection (client param runs the client() function)
