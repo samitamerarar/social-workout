@@ -1,6 +1,28 @@
+import logging
 from logging.config import dictConfig
 
 from socialworkoutapi.config import DevConfig, config
+
+
+def obfuscated(email: str, obfuscated_length: int) -> str:
+    # sam.lastname@email.com -> sa**********@email.com
+    characters = email[0:obfuscated_length]
+    first, last = email.split('@')
+    return characters + ("*" * (len(first) - obfuscated_length)) + "@" + last
+
+
+class EmailObfuscationFilter(logging.Filter):
+    """Customer filter for the logging."""
+
+    def __init__(self, name: str = "", obfuscated_length: int = 2) -> None:
+        super().__init__(name)
+        self.obfuscated_length = obfuscated_length
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if "email" in record.__dict__:
+            # email is now available in the logging dictConfig
+            record.email = obfuscated(record.email, self.obfuscated_length)
+        return True
 
 
 def configure_logging() -> None:
@@ -13,7 +35,10 @@ def configure_logging() -> None:
                     "()": "asgi_correlation_id.CorrelationIdFilter",
                     "uuid_length": 8 if isinstance(config, DevConfig) else 32,
                     "default_value": "-"
-
+                },
+                "email_obfuscation": {
+                    "()": EmailObfuscationFilter,
+                    "obfuscated_length": 2 if isinstance(config, DevConfig) else 0
                 }
             },
             "formatters": {
@@ -34,7 +59,7 @@ def configure_logging() -> None:
                     "class": "rich.logging.RichHandler",  # pip install rich (for datetime en colors output)
                     "level": "DEBUG",
                     "formatter": "console",
-                    "filters": ["correlation_id"]
+                    "filters": ["correlation_id", "email_obfuscation"]
                 },
                 "rotating_file": {
                     "class": "logging.handlers.RotatingFileHandler",
@@ -44,7 +69,7 @@ def configure_logging() -> None:
                     "maxBytes": 1024 * 1024,  # 1MB
                     "backupCount": 2,  # how many files
                     "encoding": "utf8",
-                    "filters": ["correlation_id"]
+                    "filters": ["correlation_id", "email_obfuscation"]
                 }
             },
             "loggers": {
