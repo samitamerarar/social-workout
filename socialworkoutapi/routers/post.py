@@ -10,7 +10,7 @@ async def find_post(post_id: int):
     return await database.fetch_one(query)
 
 
-@router.post("/create", response_model=UserPost)
+@router.post("/create", response_model=UserPost, status_code=201)
 async def create_post(post: UserPostIn):
     data = post.dict()
     query = post_table.insert().values(data)
@@ -24,7 +24,7 @@ async def get_all_posts():
     return await database.fetch_all(query)
 
 
-@router.post("/comment", response_model=Comment)
+@router.post("/comment", response_model=Comment, status_code=201)
 async def create_comment(comment: CommentIn):
     post = await find_post(comment.post_id)
     if not post:
