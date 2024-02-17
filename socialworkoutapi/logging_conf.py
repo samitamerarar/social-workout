@@ -8,23 +8,32 @@ def configure_logging() -> None:
         {
             "version": 1,
             "disable_existing_loggers": False,
+            "filters": {
+                "correlation_id": {  # asgi_correlation_id.CorrelationIdFilter(uuid_length=8, default_value="-")
+                    "()": "asgi_correlation_id.CorrelationIdFilter",
+                    "uuid_length": 8 if isinstance(config, DevConfig) else 32,
+                    "default_value": "-"
+
+                }
+            },
             "formatters": {
                 "console": {
                     "class": "logging.Formatter",
                     "datefmt": "%Y-%m-%dT%H:%M:%S",
-                    "format": "%(name)s:%(lineno)d - %(message)s"
+                    "format": "(%(correlation_id)s) %(name)s:%(lineno)d - %(message)s"
                 },
                 "file": {
                     "class": "logging.Formatter",
                     "datefmt": "%Y-%m-%dT%H:%M:%S",
-                    "format": "%(asctime)s.%(msecs)04dZ | %(levelname)-8s | %(name)s:%(lineno)d - %(message)s"
+                    "format": "%(asctime)s.%(msecs)04dZ | %(levelname)-8s | [%(correlation_id)s] %(name)s:%(lineno)d - %(message)s"
                 }
             },
             "handlers": {
                 "default": {
                     "class": "rich.logging.RichHandler",  # pip install rich (for datetime en colors output)
                     "level": "DEBUG",
-                    "formatter": "console"
+                    "formatter": "console",
+                    "filters": ["correlation_id"]
                 },
                 "rotating_file": {
                     "class": "logging.handlers.RotatingFileHandler",
@@ -33,7 +42,8 @@ def configure_logging() -> None:
                     "filename": "socialworkoutapi.log",
                     "maxBytes": 1024 * 1024,  # 1MB
                     "backupCount": 2,  # how many files
-                    "encoding": "utf8"
+                    "encoding": "utf8",
+                    "filters": ["correlation_id"]
                 }
             },
             "loggers": {

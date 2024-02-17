@@ -6,3 +6,4 @@ sqlalchemy
 databases[aiosqlite] # SQLite
 python-dotenv
 rich
+asgi-correlation-id
