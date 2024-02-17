@@ -1,1 +1,3 @@
 isort
+pytest
+httpx
