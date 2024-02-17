@@ -7,3 +7,4 @@ databases[aiosqlite] # SQLite
 python-dotenv
 rich
 asgi-correlation-id
+python-json-logger
