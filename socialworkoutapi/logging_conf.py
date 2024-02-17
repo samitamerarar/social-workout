@@ -22,10 +22,14 @@ def configure_logging() -> None:
                     "formatter": "console"
                 }
             },
-            "loggers": {  # propagate = False : dont send to the root logger (e.g. root.socialworkoutapi.routers.post)
+            "loggers": {
+                "uvicorn": {"handlers": ["default"], "level": "INFO"},
+                "databases": {"handlers": ["default"], "level": "WARNING"},
+                "aiosqlite": {"handlers": ["default"], "level": "WARNING"},
                 "socialworkoutapi": {
                     "handlers": ["default"],
                     "level": "DEBUG" if isinstance(config, DevConfig) else "INFO",
+                    # propagate = False : dont send to the root logger (e.g. root.socialworkoutapi.routers.post)
                     "propagate": False
                 }
             }
