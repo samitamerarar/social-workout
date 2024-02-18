@@ -1,4 +1,5 @@
 import pytest
+
 from jose import jwt
 from socialworkoutapi import security
 
@@ -7,10 +8,69 @@ def test_access_token_expire_minutes():
     assert security.access_token_expire_minutes() == 30
 
 
+def test_confirm_token_expire_minutes():
+    assert security.confirm_token_expire_minutes() == 1440
+
+
 def test_create_access_token():
     token = security.create_access_token("123")
-    assert {"sub": "123"}.items() <= jwt.decode(token, key=security.SECRET_KEY,
-                                                algorithms=[security.ALGORITHM]).items()
+    assert {"sub": "123", "type": "access"}.items() <= jwt.decode(token, key=security.SECRET_KEY,
+                                                                  algorithms=[security.ALGORITHM]).items()
+
+
+def test_create_confirmation_token():
+    token = security.create_confirmation_token("123")
+    assert {"sub": "123", "type": "confirmation"}.items() <= jwt.decode(token, key=security.SECRET_KEY,
+                                                                        algorithms=[security.ALGORITHM]).items()
+
+
+def test_get_subject_for_token_type_valid_confirmation():
+    email = "test@email.com"
+    token = security.create_confirmation_token(email)
+    assert email == security.get_subject_for_token_type(token, "confirmation")
+
+
+def test_get_subject_for_token_type_valid_access():
+    email = "test@email.com"
+    token = security.create_access_token(email)
+    assert email == security.get_subject_for_token_type(token, "access")
+
+
+def test_get_subject_for_token_type_expired(mocker):
+    mocker.patch("socialworkoutapi.security.access_token_expire_minutes", return_value=-1)
+
+    email = "test@email.com"
+    token = security.create_access_token(email)
+    with pytest.raises(security.HTTPException) as exc_info:
+        security.get_subject_for_token_type(token, "access")
+    assert "Token has expired" == exc_info.value.detail
+
+
+def test_get_subject_for_token_type_invalid_token():
+    token = "some invalid token"
+    with pytest.raises(security.HTTPException) as exc_info:
+        security.get_subject_for_token_type(token, "access")
+    assert "Invalid token" == exc_info.value.detail
+
+
+def test_get_subject_for_token_type_missing_sub():
+    email = "test@email.com"
+    token = security.create_access_token(email)
+    payload = jwt.decode(token, key=security.SECRET_KEY, algorithms=[security.ALGORITHM])
+    del payload["sub"]
+    token = jwt.encode(payload, key=security.SECRET_KEY, algorithm=security.ALGORITHM)
+
+    with pytest.raises(security.HTTPException) as exc_info:
+        security.get_subject_for_token_type(token, "access")
+    assert "Token is missing 'sub' field" == exc_info.value.detail
+
+
+def test_get_subject_for_token_type_wrong_type():
+    email = "test@email.com"
+    token = security.create_confirmation_token(email)
+    with pytest.raises(security.HTTPException) as exc_info:
+        security.get_subject_for_token_type(token, "access")
+    assert "Token incorrect type, expected 'access'" == exc_info.value.detail
 
 
 def test_password_hashes():
@@ -32,9 +92,9 @@ async def test_get_user_not_found():
 
 
 @pytest.mark.anyio
-async def test_authenticate_user(registered_user: dict):
-    user = await security.authenticate_user(registered_user["email"], registered_user["password"])
-    assert user.email == registered_user["email"]
+async def test_authenticate_user(confirmed_user: dict):
+    user = await security.authenticate_user(confirmed_user["email"], confirmed_user["password"])
+    assert user.email == confirmed_user["email"]
 
 
 @pytest.mark.anyio
@@ -60,3 +120,11 @@ async def test_get_current_user(registered_user: dict):
 async def test_get_current_user_invalid_token():
     with pytest.raises(security.HTTPException):
         await security.get_current_user("invalid token")
+
+
+@pytest.mark.anyio
+async def test_get_current_user_wrong_type_token(registered_user: dict):
+    token = security.create_confirmation_token(registered_user["email"])
+
+    with pytest.raises(security.HTTPException):
+        await security.get_current_user(token)
