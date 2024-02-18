@@ -8,6 +8,7 @@ from fastapi.exception_handlers import http_exception_handler
 from socialworkoutapi.database import database
 from socialworkoutapi.logging_conf import configure_logging
 from socialworkoutapi.routers.post import router as post_router
+from socialworkoutapi.routers.user import router as user_router
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,7 @@ app.add_middleware(CorrelationIdMiddleware)
 
 
 app.include_router(post_router, prefix="/posts")
+app.include_router(user_router)
 
 
 # Whenever there is an exception raised (e.g. 404) in our routes, this is called

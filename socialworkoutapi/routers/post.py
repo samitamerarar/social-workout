@@ -1,8 +1,10 @@
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from socialworkoutapi.database import comment_table, database, post_table
 from socialworkoutapi.models.post import UserPost, UserPostIn, Comment, CommentIn, UserPostWithComments
+from socialworkoutapi.models.user import User
+from socialworkoutapi.security import get_current_user, oauth2_scheme
 
 router = APIRouter()
 
@@ -19,8 +21,9 @@ async def find_post(post_id: int):
 
 
 @router.post("/create", response_model=UserPost, status_code=201)
-async def create_post(post: UserPostIn):
+async def create_post(post: UserPostIn, request: Request):
     logger.info("Creating post")
+    current_user: User = await get_current_user(await oauth2_scheme(request))  # protect route # noqa
 
     data = post.dict()
     query = post_table.insert().values(data)
@@ -39,8 +42,9 @@ async def get_all_posts():
 
 
 @router.post("/comment", response_model=Comment, status_code=201)
-async def create_comment(comment: CommentIn):
+async def create_comment(comment: CommentIn, request: Request):
     logger.info("Creating comment")
+    current_user: User = await get_current_user(await oauth2_scheme(request))  # protect route # noqa
 
     post = await find_post(comment.post_id)
     if not post:

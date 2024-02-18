@@ -8,3 +8,6 @@ python-dotenv
 rich
 asgi-correlation-id
 python-json-logger
+python-jose
+python-multipart
+passlib[bcrypt]
