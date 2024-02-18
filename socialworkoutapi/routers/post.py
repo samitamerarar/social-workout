@@ -22,10 +22,10 @@ async def find_post(post_id: int):
 
 
 @router.post("/create", response_model=UserPost, status_code=201)
-async def create_post(post: UserPostIn, current_user: Annotated[User, Depends(get_current_user)]):  # DI
+async def create_post(post: UserPostIn, current_user: Annotated[User, Depends(get_current_user)]):
     logger.info("Creating post")
 
-    data = post.dict()
+    data = {**post.dict(), "user_id": current_user.id}
     query = post_table.insert().values(data)
     last_record_id = await database.execute(query)
     return {**data, "id": last_record_id}
@@ -49,7 +49,7 @@ async def create_comment(comment: CommentIn, request: Request, current_user: Ann
     if not post:
         raise HTTPException(status_code=404, detail="Post not found.")
 
-    data = comment.dict()
+    data = {**comment.dict(), "user_id": current_user.id}
     query = comment_table.insert().values(data)
     last_record_id = await database.execute(query)
     return {**data, "id": last_record_id}
