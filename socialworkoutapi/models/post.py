@@ -38,6 +38,7 @@ class UserPostWithComments(BaseModel):
     comments: list[Comment]
 
 
+# Many to many relationship
 class PostLikeIn(BaseModel):
     post_id: int
 
