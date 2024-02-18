@@ -1,4 +1,5 @@
 import logging
+from enum import Enum
 from typing import Annotated
 
 import sqlalchemy
@@ -9,6 +10,7 @@ from socialworkoutapi.models.post import (
     Comment, CommentIn,
     UserPostWithComments,
     PostLike, PostLikeIn,
+    UserPostWithLikes
 )
 from socialworkoutapi.models.user import User
 from socialworkoutapi.security import get_current_user
@@ -47,10 +49,22 @@ async def create_post(post: UserPostIn, current_user: Annotated[User, Depends(ge
     return {**data, "id": last_record_id}
 
 
-@router.get("/all", response_model=list[UserPost])
-async def get_all_posts():
+class PostSorting(str, Enum):
+    new = "new"
+    old = "old"
+    most_likes = "most_likes"
+
+
+@router.get("/all", response_model=list[UserPostWithLikes])
+async def get_all_posts(sorting: PostSorting = PostSorting.new):  # (e.g. /all?sorting=most_likes)
     logger.info("Getting all posts")
-    query = post_table.select()
+
+    if sorting == PostSorting.new:
+        query = select_post_and_likes.order_by(post_table.c.id.desc())
+    elif sorting == PostSorting.old:
+        query = select_post_and_likes.order_by(post_table.c.id.asc())
+    elif sorting == PostSorting.most_likes:
+        query = select_post_and_likes.order_by(sqlalchemy.desc("likes"))
 
     logger.debug(query)
 
