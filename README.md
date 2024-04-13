@@ -1,5 +1,9 @@
 # Social Workout
 
+## Documentation
+
+https://socialworkout-api.samiarar.com/docs
+
 ## Development
 
 ### Install dependencies
