@@ -15,6 +15,12 @@ pip install -r .\requirements-dev.txt
 uvicorn socialworkoutapi.main:app --reload
 ```
 
+### Deploy with Docker
+
+```bash
+docker-compose up --build
+```
+
 ### Pytest
 
 run pytest:
