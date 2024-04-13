@@ -1,0 +1,10 @@
+version: "3"
+
+services:
+  web:
+    build: .
+    command: sh -c "uvicorn socialworkoutapi.main:app --port=96 --host=0.0.0.0"
+    env_file:
+      - .env
+    ports:
+      - 5002:96
