@@ -4,6 +4,7 @@ services:
   web:
     build: .
     command: sh -c "uvicorn socialworkoutapi.main:app --port=96 --host=0.0.0.0"
+    container_name: socialworkout-api
     env_file:
       - .env
     ports:
