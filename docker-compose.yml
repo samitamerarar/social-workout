@@ -8,10 +8,10 @@ services:
     env_file:
       - .env
     networks:
-      - nginxproxymanager_default
+      - nginx-proxy-manager_default
     ports:
       - 5002:96
 
 networks:
-  nginxproxymanager_default:
+  nginx-proxy-manager_default:
     external: true
