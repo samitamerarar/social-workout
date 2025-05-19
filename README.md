@@ -22,7 +22,7 @@ uvicorn socialworkoutapi.main:app --reload
 ### Deploy with Docker
 
 ```bash
-docker-compose up --build
+docker-compose up --build -d
 ```
 
 ### Pytest
